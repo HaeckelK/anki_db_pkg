@@ -3,6 +3,8 @@ import os
 import csv
 from collections import namedtuple
 
+from . import utils
+
 ReviewRow = namedtuple('ReviewRow', ('id', 'cid', 'usn', 'ease', 'ivl',
                                'lastIvl', 'factor', 'time', 'type'))
 CardRow = namedtuple('CardRow', ('id','nid','did','ord','mod','usn',
@@ -38,6 +40,96 @@ def _export_csv(data, columns, table, folder):
         writer.writerows(data)
     return filename
 
+
+class Note():
+    def __init__(self, conn, mid, fields):
+        # mid must exist!
+        self.conn = conn
+        self.id = utils.intTime(1000)
+        self.guid = utils.guid64()
+        self.mid = mid
+        self.mod = utils.intTime() # Why no 1000?
+        self.usn = -1 # Indicates change needs to be pushed to server?
+        self.fields = fields # Need to be separated by special character
+        self.flags = 0 # Unused
+        self.data = '' # Unused
+        
+        return
+
+    def add(self):
+        # csum is used to check that note doesn't already exist.
+        # I have not yet replicated this functionality
+        csum = utils.fieldChecksum(self.fields[0])
+        tags = '' # Leave blank for now
+        fields = utils.joinFields(self.fields)
+        sfld = self.fields[0] # This is not correct
+        res = self.conn.cursor().execute(
+            """
+insert or replace into notes values (?,?,?,?,?,?,?,?,?,?,?)""",(
+            self.id,
+            self.guid,
+            self.mid,
+            self.mod,
+            self.usn,
+            tags,
+            fields,
+            sfld,
+            csum,
+            self.flags,
+            self.data
+        ))
+        self.conn.commit()
+        return self.id
+
+class Card:
+    def __init__(self, conn, nid, did):
+        self.conn = conn
+        self.id = utils.intTime(1000) # Does this need the 1000?
+        self.nid = nid
+        self.did = did
+        self.ord = 0
+        self.mod = utils.intTime()
+        self.usn = -1
+        self.type = 0
+        self.queue = 0
+        self.due = 0
+        self.ivl = 0
+        self.factor = 0
+        self.reps = 0
+        self.lapses = 0
+        self.left = 0
+        self.odue = 0
+        self.odid = 0
+        self.flags = 0
+        self.data = ''
+        return
+
+    def add(self):
+        res = self.conn.cursor().execute(
+            """
+insert or replace into cards values
+(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",(
+            self.id,
+            self.nid,
+            self.did,
+            self.ord,
+            self.mod,
+            self.usn,
+            self.type,
+            self.queue,
+            self.due,
+            self.ivl,
+            self.factor,
+            self.reps,
+            self.lapses,
+            self.left,
+            self.odue,
+            self.odid,
+            self.flags,
+            self.data)
+        )
+        self.conn.commit()
+        return self.id
 
 class Ankidb():
     expected_tables = ('col', 'notes', 'cards', 'revlog', 'graves',
