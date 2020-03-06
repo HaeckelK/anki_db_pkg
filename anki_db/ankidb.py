@@ -56,7 +56,7 @@ class NewNote():
         
         return
 
-    def add(self):
+    def add(self, commit=True):
         # csum is used to check that note doesn't already exist.
         # I have not yet replicated this functionality
         csum = utils.fieldChecksum(self.fields[0])
@@ -78,7 +78,8 @@ insert or replace into notes values (?,?,?,?,?,?,?,?,?,?,?)""",(
             self.flags,
             self.data
         ))
-        self.conn.commit()
+        if commit:
+            self.conn.commit()
         return self.id
 
 class NewCard:
@@ -104,7 +105,7 @@ class NewCard:
         self.data = ''
         return
 
-    def add(self):
+    def add(self, commit=True):
         res = self.conn.cursor().execute(
             """
 insert or replace into cards values
@@ -128,7 +129,8 @@ insert or replace into cards values
             self.flags,
             self.data)
         )
-        self.conn.commit()
+        if commit:
+            self.conn.commit()
         return self.id
 
 class Ankidb():
