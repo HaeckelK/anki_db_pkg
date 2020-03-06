@@ -44,7 +44,6 @@ def _export_csv(data, columns, table, folder):
 
 class NewNote():
     def __init__(self, conn, mid, fields, did):
-        # mid must exist!
         self.conn = conn
         self.id = utils.intTime(1000)
         self.guid = utils.guid64()
@@ -59,6 +58,11 @@ class NewNote():
         return
 
     def add(self, commit=True):
+        if self.model is None:
+            print('Model not found in database')
+            print('mid', self.mid)
+            print('Abort add')
+            return
         print('Add NewNote')
         print('Deck:', self.did)
         print('Model:', self.model.mid)
