@@ -4,6 +4,7 @@ import csv
 from collections import namedtuple
 
 from . import utils
+from . import models
 
 ReviewRow = namedtuple('ReviewRow', ('id', 'cid', 'usn', 'ease', 'ivl',
                                'lastIvl', 'factor', 'time', 'type'))
@@ -54,7 +55,7 @@ class NewNote():
         self.flags = 0 # Unused
         self.data = '' # Unused
         self.did = did
-        
+        self.model = models.get_model(self.conn, self.mid)
         return
 
     def add(self, commit=True):
@@ -84,8 +85,7 @@ insert or replace into notes values (?,?,?,?,?,?,?,?,?,?,?)""",(
         ))
         output = {self.id: []}
         # TODO : Different number for Cloze cards?
-        # TODO : Ord from mid
-        ord_max = 2
+        ord_max = self.model.template_count
         for ord in range(ord_max):
             cardid = self._add_card(nid=self.id, did=self.did, ord=ord)
             output[self.id].append(cardid)
