@@ -42,7 +42,7 @@ def _export_csv(data, columns, table, folder):
 
 
 class NewNote():
-    def __init__(self, conn, mid, fields):
+    def __init__(self, conn, mid, fields, did):
         # mid must exist!
         self.conn = conn
         self.id = utils.intTime(1000)
@@ -53,10 +53,14 @@ class NewNote():
         self.fields = fields # Need to be separated by special character
         self.flags = 0 # Unused
         self.data = '' # Unused
+        self.did = did
         
         return
 
     def add(self, commit=True):
+        print('Add NewNote')
+        print('Deck:', self.did)
+        print('Model:', self.mid)
         # csum is used to check that note doesn't already exist.
         # I have not yet replicated this functionality
         csum = utils.fieldChecksum(self.fields[0])
@@ -78,13 +82,27 @@ insert or replace into notes values (?,?,?,?,?,?,?,?,?,?,?)""",(
             self.flags,
             self.data
         ))
+        output = {self.id: []}
+        # TODO : Different number for Cloze cards?
+        # TODO : Ord from mid
+        ord_max = 2
+        for ord in range(ord_max):
+            cardid = self._add_card(nid=self.id, did=self.did, ord=ord)
+            output[self.id].append(cardid)
         if commit:
             self.conn.commit()
-        return self.id
+        return output
+
+    def _add_card(self, nid, did, ord):
+        # TODO : How many? Need to add type Number? (into card?) Ord?
+        card = NewCard(self.conn, nid, did, ord)
+        cardid = card.add(commit=False)
+        return cardid
 
 class NewCard:
-    def __init__(self, conn, nid, did):
+    def __init__(self, conn, nid, did, ord):
         self.conn = conn
+        self.ord = ord
         self.id = utils.intTime(1000) # Does this need the 1000?
         self.nid = nid
         self.did = did
@@ -106,6 +124,9 @@ class NewCard:
         return
 
     def add(self, commit=True):
+        print('Add NewCard')
+        print('Note:', self.nid)
+        print('Deck:', self.did)
         res = self.conn.cursor().execute(
             """
 insert or replace into cards values
