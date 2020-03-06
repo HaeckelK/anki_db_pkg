@@ -41,7 +41,7 @@ def _export_csv(data, columns, table, folder):
     return filename
 
 
-class Note():
+class NewNote():
     def __init__(self, conn, mid, fields):
         # mid must exist!
         self.conn = conn
@@ -81,7 +81,7 @@ insert or replace into notes values (?,?,?,?,?,?,?,?,?,?,?)""",(
         self.conn.commit()
         return self.id
 
-class Card:
+class NewCard:
     def __init__(self, conn, nid, did):
         self.conn = conn
         self.id = utils.intTime(1000) # Does this need the 1000?
