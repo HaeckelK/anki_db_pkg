@@ -61,7 +61,8 @@ class NewNote():
     def add(self, commit=True):
         print('Add NewNote')
         print('Deck:', self.did)
-        print('Model:', self.mid)
+        print('Model:', self.model.mid)
+        print('Model:', self.model.name)
         # csum is used to check that note doesn't already exist.
         csum = utils.fieldChecksum(self.fields[0])
         if not self._csum_check(csum):
