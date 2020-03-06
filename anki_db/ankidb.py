@@ -63,8 +63,11 @@ class NewNote():
         print('Deck:', self.did)
         print('Model:', self.mid)
         # csum is used to check that note doesn't already exist.
-        # I have not yet replicated this functionality
         csum = utils.fieldChecksum(self.fields[0])
+        if not self._csum_check(csum):
+            # TODO : Return Noteids?
+            print('Note already exists. Abort')
+            return
         tags = '' # Leave blank for now
         fields = utils.joinFields(self.fields)
         sfld = self.fields[0] # This is not correct
@@ -98,6 +101,16 @@ insert or replace into notes values (?,?,?,?,?,?,?,?,?,?,?)""",(
         card = NewCard(self.conn, nid, did, ord)
         cardid = card.add(commit=False)
         return cardid
+
+    def _csum_check(self, csum):
+        # Check if csum already in DB
+        cursor = self.conn.cursor()
+        cursor.execute('SELECT COUNT(*) csum FROM notes WHERE csum={}'.format(csum))
+        count = cursor.fetchone()[0]
+        if count != 0:
+            return False
+        else :
+            return True
 
 class NewCard:
     def __init__(self, conn, nid, did, ord):
